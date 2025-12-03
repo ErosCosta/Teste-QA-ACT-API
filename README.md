@@ -9,7 +9,7 @@ Projeto automatizado para validar a **Dog API** utilizando **Java 11, JUnit 5, R
 
 ## Como executar
 ```
-./gradlew clean test
+gradle clean test --no-daemon
 ```
 
 ## Relatório Allure
