@@ -2,57 +2,114 @@ name: Allure Report
 
 on:
   workflow_run:
-    workflows: ["Teste QA - API"]
+    workflows: ["Teste QA - API"]  
     types:
       - completed
 
-  workflow_dispatch:
-
 permissions:
-  contents: write
+  contents: read  
 
 jobs:
   generate-report:
-    name: Gerar e publicar Allure Report
     runs-on: ubuntu-latest
-
     steps:
-      - name: Baixar repositório
+      - name: Checkout repo (for publishing)
         uses: actions/checkout@v4
 
-      - name: Baixar resultados do Allure (artifact)
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-results
-          path: allure-results
-
-      - name: Verificar allure-results
+      - name: Get triggering run id
+        id: runinfo
         run: |
-          echo "Conteúdo de allure-results:"
-          ls -la allure-results || true
+          echo "triggering_run_id=${{ github.event.workflow_run.id }}" >> $GITHUB_OUTPUT
 
-      - name: Instalar Allure CLI
+      - name: List artifacts for triggering run (debug)
+        env:
+          RUN_ID: ${{ steps.runinfo.outputs.triggering_run_id }}
+          REPO: ${{ github.repository }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Run id: $RUN_ID"
+          curl -s -H "Authorization: Bearer $TOKEN" \
+               -H "Accept: application/vnd.github+json" \
+               "https://api.github.com/repos/$REPO/actions/runs/$RUN_ID/artifacts" \
+               > artifacts-list.json
+          echo "Artifacts response:"
+          jq . artifacts-list.json || cat artifacts-list.json
+
+      - name: Download allure-results artifact from triggering run
+        env:
+          RUN_ID: ${{ steps.runinfo.outputs.triggering_run_id }}
+          REPO: ${{ github.repository }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # find artifact named "allure-results"
+          ARTIFACT_ID=$(curl -s -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$REPO/actions/runs/$RUN_ID/artifacts" \
+            | jq -r '.artifacts[] | select(.name == "allure-results") | .id')
+
+          if [ -z "$ARTIFACT_ID" ] || [ "$ARTIFACT_ID" = "null" ]; then
+            echo "❌ allure-results artifact not found for run $RUN_ID"
+            exit 1
+          fi
+
+          echo "Found artifact id: $ARTIFACT_ID"
+
+          # get archive download url (requires authenticated request)
+          DOWNLOAD_URL=$(curl -s -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$REPO/actions/artifacts/$ARTIFACT_ID/zip" \
+            -I 2>/dev/null | awk '/^Location: /{print $2}' | tr -d '\r')
+
+          # Some endpoints return the file directly; if DOWNLOAD_URL is empty we attempt direct download
+          if [ -z "$DOWNLOAD_URL" ]; then
+            echo "No redirect location header; downloading direct endpoint"
+            curl -sL -H "Authorization: Bearer $TOKEN" \
+              -H "Accept: application/octet-stream" \
+              "https://api.github.com/repos/$REPO/actions/artifacts/$ARTIFACT_ID/zip" \
+              --output artifact-$ARTIFACT_ID.zip
+          else
+            echo "Downloading from redirect URL"
+            curl -sL -H "Authorization: Bearer $TOKEN" -o artifact-$ARTIFACT_ID.zip "$DOWNLOAD_URL"
+          fi
+
+          ls -la artifact-*.zip
+          unzip -q artifact-$ARTIFACT_ID.zip -d allure-results-raw || true
+          echo "Files in extracted dir:"
+          ls -la allure-results-raw || true
+
+      - name: Prepare allure-results folder
+        run: |
+          # actions/upload-artifact stores files in a directory named like the artifact,
+          # the zip may contain the files directly or inside a folder. Normalize to build/allure-results
+          mkdir -p build/allure-results
+          # copy all json files and container/result files into build/allure-results
+          cp -r allure-results-raw/* build/allure-results/ || true
+          echo "build/allure-results contents:"
+          ls -la build/allure-results || true
+
+      - name: Install Allure CLI
         run: |
           sudo apt-get update
           sudo apt-get install -y wget unzip
           wget https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.zip
           unzip -q allure-2.24.1.zip
           sudo mv allure-2.24.1 /opt/allure
-          sudo ln -sf /opt/allure/bin/allure /usr/bin/allure
+          sudo ln -s /opt/allure/bin/allure /usr/bin/allure
           allure --version
 
-      - name: Gerar Allure Report
+      - name: Verify allure-results and generate Allure report
         run: |
-          if [ -d "allure-results" ] && [ "$(ls -A allure-results)" ]; then
-            allure generate allure-results -o allure-report --clean
-            ls -la allure-report || true
-          else
-            echo "Diretório allure-results vazio — nada para gerar. Saindo com sucesso."
-            exit 0
+          if [ ! -d "build/allure-results" ] || [ -z "$(ls -A build/allure-results)" ]; then
+            echo "❌ No allure results found in build/allure-results"
+            ls -la build || true
+            exit 1
           fi
+          allure generate build/allure-results -o build/allure-report --clean
+          echo "Report generated at build/allure-report"
+          ls -la build/allure-report || true
 
-      - name: Publicar no GitHub Pages
+      - name: Publish Allure report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./allure-report
+          publish_dir: ./build/allure-report
