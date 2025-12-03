@@ -33,8 +33,24 @@ jobs:
           name: junit-report
           path: build/reports/tests/test/
 
-      - name: Salvar Allure Results
+      - name: Mostrar estrutura do build (debug)
+        run: |
+          echo ">>> pwd"
+          pwd
+          echo ">>> listar root"
+          ls -la
+          echo ">>> listar build"
+          ls -la build || true
+          echo ">>> listar build/reports/tests/test"
+          ls -la build/reports/tests/test || true
+          echo ">>> listar build/allure-results"
+          ls -la build/allure-results || true
+          echo ">>> mostrar alguns arquivos (se existirem)"
+          find build/allure-results -maxdepth 1 -type f -print -exec head -n 5 {} \; || true
+
+      - name: Salvar Allure Results (upload)
         uses: actions/upload-artifact@v4
         with:
           name: allure-results
-          path: build/allure-results/
+          path: build/allure-results/**
+
