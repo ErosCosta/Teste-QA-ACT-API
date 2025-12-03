@@ -1,24 +1,16 @@
-# Build e cache
-.gradle/
-build/
-bin/
-out/
-
-# Relatórios
-*.html
-*.css
-*.js
-*.xml
-*.bin
+# Build
+/build/
+/bin/
+/out/
+/.gradle/
 
 # Allure
-allure-report/
-allure-results/
+/allure-results/
+/allure-report/
 
 # IDEs
-.vscode/
-.idea/
+/.idea/
+/.vscode/
 
-# Sistema
-.DS_Store
-Thumbs.db
+# Logs
+*.log
