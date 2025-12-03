@@ -14,16 +14,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Baixar repositório
+      - name: Baixar repositório
         uses: actions/checkout@v4
 
-      - name: 📥 Baixar resultados do Allure
+      - name: Baixar resultados do Allure
         uses: actions/download-artifact@v4
         with:
           name: allure-results
           path: allure-results
 
-      - name: 🔧 Instalar Allure
+      - name: Instalar Allure
         run: |
           sudo apt-get update
           sudo apt-get install -y wget unzip
@@ -32,10 +32,10 @@ jobs:
           sudo mv allure-2.24.1 /opt/allure
           sudo ln -s /opt/allure/bin/allure /usr/bin/allure
 
-      - name: 🏗️ Gerar Allure Report
+      - name: Gerar Allure Report
         run: allure generate allure-results -o allure-report --clean
 
-      - name: 🚀 Publicar no GitHub Pages
+      - name: Publicar no GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
