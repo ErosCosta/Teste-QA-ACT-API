@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.example.dogapi.RandomImageTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-12-03T15:09:59.048Z" hostname="DESKTOP-T0CITAK" time="0.336">
-  <properties/>
-  <testcase name="shouldReturnRandomImage()" classname="com.example.dogapi.RandomImageTest" time="0.336"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>
