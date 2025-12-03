@@ -1,0 +1,4 @@
+"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
+"passed","Wed Dec 03 16:33:44 UTC 2025","Wed Dec 03 16:33:44 UTC 2025","291","","com.example.dogapi.BreedsListTest","","com.example.dogapi.BreedsListTest","shouldReturnListOfBreeds","shouldReturnListOfBreeds()",""
+"passed","Wed Dec 03 16:33:42 UTC 2025","Wed Dec 03 16:33:44 UTC 2025","2014","","com.example.dogapi.BreedImagesTest","","com.example.dogapi.BreedImagesTest","shouldReturnImagesForBreed","shouldReturnImagesForBreed()",""
+"passed","Wed Dec 03 16:33:44 UTC 2025","Wed Dec 03 16:33:44 UTC 2025","242","","com.example.dogapi.RandomImageTest","","com.example.dogapi.RandomImageTest","shouldReturnRandomImage","shouldReturnRandomImage()",""
