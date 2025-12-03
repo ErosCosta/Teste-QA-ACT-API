@@ -6,10 +6,11 @@ on:
     types:
       - completed
 
-# precisamos de permissão para ler artifacts e conteúdo
 permissions:
-  contents: read
-  actions: read
+  contents: write
+  pages: write 
+  id-token: write
+  actions: write
 
 jobs:
   generate-report:
