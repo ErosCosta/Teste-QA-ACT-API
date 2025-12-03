@@ -79,13 +79,23 @@ jobs:
 
       - name: Prepare allure-results folder
         run: |
-          # actions/upload-artifact stores files in a directory named like the artifact,
-          # the zip may contain the files directly or inside a folder. Normalize to build/allure-results
           mkdir -p build/allure-results
-          # copy all json files and container/result files into build/allure-results
-          cp -r allure-results-raw/* build/allure-results/ || true
-          echo "build/allure-results contents:"
-          ls -la build/allure-results || true
+        
+          INNER_DIR=$(find allure-results-raw -type d -maxdepth 1 -mindepth 1 | head -n 1)
+
+          echo "Inner dir = $INNER_DIR"
+
+          if [ -d "$INNER_DIR" ]; then
+            echo "Copying files from inner dir"
+            cp -r "$INNER_DIR"/* build/allure-results/
+          else
+            echo "Copying files directly"
+            cp -r allure-results-raw/* build/allure-results/
+          fi
+
+          echo "Final allure-results content:"
+          ls -R build/allure-results || true
+
 
       - name: Install Allure CLI
         run: |
