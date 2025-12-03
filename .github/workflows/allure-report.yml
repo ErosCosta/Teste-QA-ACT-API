@@ -2,38 +2,54 @@ name: Allure Report
 
 on:
   workflow_run:
-    workflows: ["CI - Dog API QA"]
+    workflows: ["Teste QA - API"]
     types:
       - completed
+
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
   generate-report:
+    name: Gerar e publicar Allure Report
     runs-on: ubuntu-latest
 
     steps:
       - name: Baixar repositório
         uses: actions/checkout@v4
 
-      - name: Baixar resultados do Allure
+      - name: Baixar resultados do Allure (artifact)
         uses: actions/download-artifact@v4
         with:
           name: allure-results
           path: allure-results
 
-      - name: Instalar Allure
+      - name: Verificar allure-results
+        run: |
+          echo "Conteúdo de allure-results:"
+          ls -la allure-results || true
+
+      - name: Instalar Allure CLI
         run: |
           sudo apt-get update
           sudo apt-get install -y wget unzip
           wget https://github.com/allure-framework/allure2/releases/download/2.24.1/allure-2.24.1.zip
-          unzip allure-2.24.1.zip
+          unzip -q allure-2.24.1.zip
           sudo mv allure-2.24.1 /opt/allure
-          sudo ln -s /opt/allure/bin/allure /usr/bin/allure
+          sudo ln -sf /opt/allure/bin/allure /usr/bin/allure
+          allure --version
 
       - name: Gerar Allure Report
-        run: allure generate allure-results -o allure-report --clean
+        run: |
+          if [ -d "allure-results" ] && [ "$(ls -A allure-results)" ]; then
+            allure generate allure-results -o allure-report --clean
+            ls -la allure-report || true
+          else
+            echo "Diretório allure-results vazio — nada para gerar. Saindo com sucesso."
+            exit 0
+          fi
 
       - name: Publicar no GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
