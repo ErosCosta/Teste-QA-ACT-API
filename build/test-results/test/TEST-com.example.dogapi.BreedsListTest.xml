@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.dogapi.BreedsListTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-12-03T15:09:58.685Z" hostname="DESKTOP-T0CITAK" time="0.355">
+  <properties/>
+  <testcase name="shouldReturnListOfBreeds()" classname="com.example.dogapi.BreedsListTest" time="0.355"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,40 @@
+name: Teste QA - API
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    name: Executar Testes Automatizados
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout do código
+        uses: actions/checkout@v4
+
+      - name: 🔧 Instalar Java 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      - name: 🧰 Permitir execução do Gradle Wrapper
+        run: chmod +x ./gradlew
+
+      - name: 📦 Compilar e executar testes
+        run: ./gradlew clean test --no-daemon
+
+      - name: 📁 Salvar Relatórios de Teste (JUnit)
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-report
+          path: build/reports/tests/test/
+
+      - name: 📁 Salvar Allure Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: build/allure-results/
